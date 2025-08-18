@@ -1,0 +1,201 @@
+Here is a fully merged and professionally structured game design document for the game “Space Dodger / Asteroid Avoider”, including all mechanics, difficulty scaling, power-ups, assets, and builder-style pseudocode — ready to be pasted into a .doc or used as a development blueprint.
+
+🎮 Game Design Document
+Game Title: Space Dodger / Asteroid Avoider
+
+1. 🎯 Game Overview
+Genre:
+Arcade / Action
+Core Idea:
+Control a spaceship to dodge falling asteroids. The game becomes progressively harder over time by increasing asteroid speed, frequency, and introducing more complex obstacles and power-ups.
+Target Platform:
+Web (built using JavaScript, React, Tailwind CSS) or desktop (via Electron or NW.js)
+Play Style:
+Single-player, endless survival loop
+
+2. 🚀 Game Mechanics
+Core Mechanics
+    • Player controls a spaceship horizontally (left/right).
+    • Asteroids fall vertically from the top of the screen.
+    • Player must dodge asteroids to survive.
+    • The game ends on collision (or when lives reach zero).
+Bonus Features
+    • Power-ups: shield, slow motion, score booster.
+    • Score multipliers for consecutive dodges.
+    • Speed increases over time.
+    • Randomized asteroid size, speed, and behavior.
+
+3. 🧠 Game Progression & Difficulty
+The game uses a progressive intensity system:
+Time Survived
+Difficulty Level
+Game Changes
+0–10 sec
+1
+Base spawn rate, slow asteroids
+10–20 sec
+2
+Faster spawn rate, faster asteroids
+20–30 sec
+3
+Bigger/faster asteroids, power-ups drop
+30–50 sec
+4
+Special asteroids, limited power-ups
+50+ sec
+5+
+High pressure, combo-based scoring
+
+4. 🛠 Tools & Tech Stack
+Tool / Framework
+Purpose
+JavaScript (ES6)
+Core game logic
+React.js
+UI, game state management
+Tailwind CSS
+UI styling and responsive design
+Canvas API
+Rendering 2D gameplay
+Howler.js (opt.)
+Sound effects and audio management
+React Hooks
+Game loop, timer, and difficulty control
+
+5. 📦 Assets List
+Asset Type
+Description
+Example File Name
+Spaceship
+Player sprite
+spaceship.png
+Asteroid
+Enemy object
+asteroid_large.png
+Power-Ups
+Shield, slow-time, score boost
+shield.png, etc.
+Background
+Scrolling space background
+space_bg.jpg
+Sound FX
+Explosion, pickup, level-up
+explode.wav, etc.
+
+6. 🧱 Full Pseudocode Structure
+Initialize Game
+  - Set canvas size
+  - Load images, audio, and game variables:
+    - player_position = center bottom
+    - asteroid_list = []
+    - powerup_list = []
+    - score = 0
+    - lives = 3
+    - game_time = 0
+    - spawn_interval = 2.0
+    - asteroid_speed = 100
+    - difficulty_level = 1
+
+Main Game Loop (runs every frame via requestAnimationFrame)
+  - Update game_time
+  - Handle Player Input:
+    - LEFT arrow: move left
+    - RIGHT arrow: move right
+
+  - Update Difficulty:
+    - Every 10 seconds:
+      - difficulty_level += 1
+      - spawn_interval = max(0.3, 2.0 - difficulty_level * 0.15)
+      - asteroid_speed = min(400, 100 + difficulty_level * 20)
+      - Introduce new asteroid types or power-ups
+
+  - Spawn Asteroids:
+    - If spawn_timer > spawn_interval:
+      - Create new asteroid at random X
+      - Set speed based on difficulty
+      - Reset spawn_timer
+
+  - Update Asteroids:
+    - Move each asteroid down by (asteroid_speed * delta_time)
+    - Check collision with player:
+      - If collision and no shield:
+        - lives -= 1
+        - If lives == 0: trigger Game Over
+      - If shield active: block damage and remove shield
+    - Remove off-screen asteroids
+
+  - Update Power-Ups:
+    - Spawn rarely (based on difficulty)
+    - If collected by player:
+      - Activate effect (e.g., shield, slow time)
+
+  - Update Score:
+    - Increment based on survival time or dodged asteroids
+
+  - Draw Everything:
+    - Background
+    - Player sprite
+    - Asteroids and power-ups
+    - Score and lives UI
+
+  - Play Audio as needed
+
+  - Loop continues with consistent framerate
+
+Game Over State
+  - Display final score, difficulty reached
+  - Provide Restart or Quit option
+
+7. ✨ Power-Up Effects (Optional)
+Power-Up
+Effect Description
+Duration
+Shield
+Blocks one asteroid hit
+Until used
+Slow Time
+Reduces all asteroid speed by 50%
+5 seconds
+Score Boost
+Doubles points gained temporarily
+10 seconds
+
+8. 🔄 Adaptive Difficulty 
+If player avoids 10 asteroids in a row:
+  - Temporarily increase spawn rate
+
+If player loses 2 lives quickly:
+  - Slow down speed for 5 seconds
+This ensures the game reacts to player performance, keeping the experience challenging but fair.
+
+9. ✅ Development Checklist
+Task
+Status
+Setup canvas and game loop
+☐
+Load assets (images, sounds)
+☐
+Handle player movement
+☐
+Create falling asteroid logic
+☐
+Add collision detection
+☐
+Implement score/lives system
+☐
+Add increasing difficulty system
+☐
+Integrate power-ups
+☐
+Add Game Over screen
+☐
+Add polish (sounds, VFX, UI)
+☐
+
+10. 📈 Game Expansion Ideas
+    • Add achievements and unlockable ships.
+    • Introduce different enemy types (homing asteroids, zig-zag movement).
+    • Weekly challenges or high-score leaderboards.
+    • Controller/touch/mobile support.
+
+

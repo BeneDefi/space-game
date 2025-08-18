@@ -1,0 +1,14 @@
+
+{
+  "miniapp": {
+    "version": "1.0.0",
+    "name": "Space Dodger",
+    "homeUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co",
+    "iconUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/icon.png",
+    "imageUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/preview.png",
+    "buttonTitle": "🚀 Play Space Dodger",
+    "splashImageUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/splash.png",
+    "splashBackgroundColor": "#0052ff",
+    "webhookUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/api/webhooks/farcaster"
+  }
+}

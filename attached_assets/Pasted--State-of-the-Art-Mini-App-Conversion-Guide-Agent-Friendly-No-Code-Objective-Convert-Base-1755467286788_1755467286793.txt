@@ -1,0 +1,331 @@
+# State-of-the-Art Mini-App Conversion Guide (Agent-Friendly, No Code)
+
+**Objective:** Convert `Base_game` into a Farcaster-native, Base-optimized mini app that’s discoverable, secure, performant, viral, and notification-enabled.
+
+---
+
+## 0) Inputs, Assumptions, and Hard Constraints
+
+* **Repo**: `git@github.com:BeneDefi/Base_game.git` (contents not inspected; plan is repo-agnostic).
+* **Target surfaces**: Farcaster clients (incl. Base App).
+* **Do not include code**; file names, fields, and endpoints may be referenced by name only.
+* **Primary standards & tooling**: Farcaster Mini App spec, `/.well-known/farcaster.json` manifest with signed ownership; `fc:frame` embed metadata; Base MiniKit integration; Neynar SDK for growth, analytics, and notifications. ([docs.neynar.com][1], [Base Documentation][2])
+
+**Success criteria (high level):**
+
+* Valid, signed **farcaster.json** served at the well-known path.
+* Proper **fc\:frame** metadata renders a launch button and rich preview in feeds.
+* MiniKit context and auth patterns respected; onchain actions gated behind wallet auth.
+* Notifications configured and rate-limited; add/remove events handled.
+* Search & discovery surfaces enriched; share flows produce viral lift.
+* Launch checklist passes; no blocking issues in Base App. ([docs.neynar.com][1], [Base Documentation][3])
+
+---
+
+## 1) Domain, Hosting, and Delivery Readiness
+
+**Inputs needed**
+
+* Public HTTPS domain dedicated to the game (stable, cache-friendly).
+* Ability to place files under `/.well-known/`.
+* Static asset endpoints for **icon**, **splash image**, **open graph / imageUrl**, all HTTPS and publicly accessible.
+
+**Acceptance checks**
+
+* HTTPS with valid TLS; assets render in an incognito session.
+* Images are PNG/JPG/WebP in supported dimensions; avoid redirects and query-auth on image URLs. ([Base Documentation][4])
+
+**Common failure modes**
+
+* Broken image URLs; blocked by auth/cookies; non-HTTPS; wrong MIME types. ([Base Documentation][4])
+
+---
+
+## 2) Mini-App Manifest (farcaster.json) — Authoritative Metadata
+
+**What to publish**
+
+* A **farcaster.json** manifest at `/.well-known/farcaster.json` that includes:
+
+  * **miniapp** object: **version**, **name**, **homeUrl**, **iconUrl** as required; recommended fields include **imageUrl**, **buttonTitle**, **splashImageUrl**, **splashBackgroundColor**, and **webhookUrl** (for events).
+  * **accountAssociation**: JSON Farcaster Signature (JFS) proving domain ownership. ([docs.neynar.com][1])
+
+**Ownership proof**
+
+* Use the official Manifest Tool flow to generate **accountAssociation** by signing with the custody address, then update the live manifest to include the signed header, payload, and signature. ([docs.neynar.com][1])
+
+**Caching note**
+
+* Farcaster clients cache manifests; force refresh during testing via developer tools if needed. ([docs.neynar.com][5])
+
+**Pass/Fail**
+
+* **Pass**: `/.well-known/farcaster.json` returns valid JSON with a non-expired signature and all referenced image URLs resolvable via HTTPS.
+* **Fail**: Missing signature; 404; invalid JSON; assets blocked; stale cache not refreshed. ([docs.neynar.com][1])
+
+---
+
+## 3) Embed & Preview Metadata — Make Shares Launch Your App
+
+**Goal**
+
+* Ensure any shared link to the game renders a **rich embed** with a **launch mini app** button in social feeds.
+
+**What to supply**
+
+* A page head metadata entry named **fc\:frame** whose JSON instructs clients to show an image, title/CTA, and a **launch\_miniapp** action pointing to the app’s **homeUrl**.
+* Keep imagery, name, and CTA consistent with manifest. ([docs.neynar.com][1], [Base Documentation][6])
+
+**Acceptance checks**
+
+* Sharing a canonical game URL in Base App/Farcaster shows a branded card with a working **Launch** button.
+* Embed Tool validates configuration (see Test & Deploy guidance). ([Base Documentation][7])
+
+**Common failure modes**
+
+* Missing `fc:frame`; wrong meta name; inaccessible `imageUrl`; non-HTTPS; mismatched URLs between embed and manifest. ([Base Documentation][4])
+
+---
+
+## 4) Base MiniKit Integration Patterns (No UI Code)
+
+**Principles**
+
+* Treat MiniKit **context** as analytics/UX input; treat **auth** as cryptographically verified (SIWF/Quick Auth or wallet auth).
+* Initialize MiniKit early so context (fid, username, app/client info) is available for personalization and logging.
+* Onchain actions (**mint**, **transfer**, **buy**) must be gated behind wallet auth and appropriate network (Base). ([Base Documentation][8])
+
+**Acceptance checks**
+
+* Context present for analytics and lightweight personalization.
+* Secure flows require verified identity (JWT or signed message / wallet) before server-side effects. ([Base Documentation][8])
+
+**Common failure modes**
+
+* Using context alone as primary auth; requesting wallet too early; mixing testnet/mainnet inadvertently. ([Base Documentation][8])
+
+---
+
+## 5) Authentication & Identity (Farcaster + Wallet)
+
+**Supported approaches**
+
+* **Sign-In With Farcaster (SIWF)/Quick Auth** for low-friction identity;
+* **Wallet auth** for secure, state-changing operations;
+* Use **context data** for analytics, not authentication. ([Base Documentation][8])
+
+**User journeys to support**
+
+* **Create Account Users (Base App onboarding)**: In-app tray signs SIWF with passkey.
+* **Connect Account Users**: One-time deep link to register wallet as auth address, then seamless sign-in. ([Base Documentation][8])
+
+**Acceptance checks**
+
+* Session token or proof of auth is captured and verified before privileged actions.
+* Graceful fallback if user declines wallet or SIWF. ([Base Documentation][8])
+
+---
+
+## 6) Notifications & Event Webhooks (Neynar)
+
+**Why Neynar here**
+
+* Centralized event ingestion; handles add/remove, permission revokes; cohort targeting; analytics (open rates); send via portal or API. ([docs.neynar.com][5])
+
+**Set-up**
+
+* Put Neynar **events webhook URL** into **webhookUrl** in your manifest so add/remove and notifications-enabled events are delivered.
+* In-app prompt workflow: ask user to “add mini app”; if added and notifications enabled, a token and callback will be delivered to Neynar. ([docs.neynar.com][5])
+
+**Operational rules**
+
+* Respect rate limits; segment cohorts; keep content relevant and time-boxed; measure open/CTR in the Dev Portal. ([docs.neynar.com][5])
+
+**Acceptance checks**
+
+* App can target cohorts (e.g., new players, lapsed players, high-score achievers).
+* Add/remove cycles reflect in dashboard; tokens not stored client-side unnecessarily. ([docs.neynar.com][5])
+
+---
+
+## 7) Search, Discovery, and Sharing Flywheel
+
+**Discovery surfaces**
+
+* Base App catalog, search, featured/promoted slots; social feed shares with rich embeds; ecosystem pages.
+* Ensure **name**, **iconUrl**, **imageUrl**, and **homeUrl** are crisp, brand-consistent, and stable. ([Base Documentation][8])
+
+**Sharing moments**
+
+* Prompt shares on meaningful beats: new high score, achievement unlocked, streak milestones, co-op wins.
+* Pre-compose share text that references the app name and a canonical link that renders a launchable embed. ([Base Documentation][9])
+
+**Acceptance checks**
+
+* Shared links reliably render cards; shares correlate with DAU lift; content diversity avoids spam signals in ranking. ([Base Documentation][10])
+
+---
+
+## 8) UX & Performance Non-Negotiables (Feed-Native)
+
+**Form factor**
+
+* Compact, touch-first views; safe-area compliance; single clear primary action per screen.
+* Skeletons and optimistic UI to keep TTI low; eliminate layout shifts in the first screen. ([Base Documentation][11])
+
+**Navigation**
+
+* Keep users inside the mini app; external links should be rare and justified (TOS, support). Use documented **Links** behaviors for safe transitions. ([Base Documentation][12])
+
+**Pass/Fail**
+
+* **Pass**: Fast first paint, clear action, minimal friction to start playing; no broken deep links.
+* **Fail**: Long spinners; modal stacks for auth before any value; heavy assets before first interaction. ([Base Documentation][11])
+
+---
+
+## 9) Data, Fairness, and Abuse Mitigation
+
+**Identity & storage**
+
+* Treat **fid** as the durable user key; map to internal player profile.
+* Store lightweight progress off-chain keyed by fid; only sign or mutate onchain at explicit actions.
+
+**Abuse controls**
+
+* Rate-limit server endpoints per fid/IP; fail closed on signature/JWT expiry.
+* Optionally gate sensitive actions by **Neynar User Score** threshold; start around 0.5 and calibrate. ([docs.neynar.com][13])
+
+**API hygiene**
+
+* Observe Neynar per-endpoint and global RPM; plan backoff and circuit-breakers; cache immutable lookups. ([docs.neynar.com][14])
+
+---
+
+## 10) Growth System Design (Built-In Virality)
+
+**Core loops to instrument**
+
+* **Share → Launch → First Win → Share** loop with embedded launch button.
+* **Streaks & challenges** with time-boxed windows and leaderboard snapshots (daily/weekly).
+* **Friend challenges**: URL share that re-opens the same challenge context. ([Base Documentation][15])
+
+**Copy & creative**
+
+* Clear CTA verbs; high-contrast imagery; consistent brand; show progress or scarcity.
+* Avoid generic “play now” spam; tie reward to the social act (e.g., bonus attempts for shared challenges).
+
+---
+
+## 11) Launch Readiness — Single Source of Truth
+
+**Pre-deployment checklist**
+
+* Public HTTPS domain live.
+* **farcaster.json** valid and signed; assets resolve.
+* **fc\:frame** metadata present; embed shows **Launch** button.
+* Manifest and embed validated via official tools.
+* MiniKit context and auth patterns verified; onchain flows tested on Base.
+* Notifications wired; a dry-run cohort receives and opens. ([Base Documentation][7])
+
+**Rollout plan**
+
+* Soft-launch in a niche channel/community; monitor crash-free sessions, launch-to-play conversion, share rate, and session length.
+* Iterate imagery and CTA text for higher click-through on embeds. ([Base Documentation][6])
+
+---
+
+## 12) Agent Execution Plan (Deterministic Steps)
+
+**A. Inventory & Targets**
+
+1. Confirm canonical domain, app **homeUrl**, brand assets (icon, splash, open-graph image).
+2. Define the canonical **share URL** (should equal or redirect to **homeUrl** used by embed and manifest). ([docs.neynar.com][1], [Base Documentation][6])
+
+**B. Manifest**
+3\) Create `/.well-known/farcaster.json` with **miniapp** fields: version, name, homeUrl, iconUrl; add imageUrl, buttonTitle, splashImageUrl, splashBackgroundColor, webhookUrl.
+4\) Use the Manifest Tool to produce **accountAssociation**; update the live manifest.
+5\) Validate and record a “200 + valid JSON + HTTPS images” result. ([docs.neynar.com][1], [Base Documentation][7])
+
+**C. Embeds**
+6\) Add **fc\:frame** metadata on the launch page specifying image, title/CTA, and **launch\_miniapp** action targeting the canonical URL.
+7\) Verify with the Embed Tool; capture a screenshot of the rendered card. ([docs.neynar.com][1], [Base Documentation][7])
+
+**D. MiniKit & Auth**
+8\) Ensure MiniKit context is available for analytics; instrument fid and client in telemetry.
+9\) Implement SIWF/Quick Auth or wallet auth before any privileged operation; ensure Base App flows behave as documented. ([Base Documentation][8])
+
+**E. Notifications**
+10\) Insert Neynar **events webhook URL** into **webhookUrl** in the manifest.
+11\) Implement the in-app “Add Mini App” prompt; verify add/remove and token issuance appear in Neynar dashboard.
+12\) Define cohorts and send a small test notification; verify opens and deep link target. ([docs.neynar.com][5])
+
+**F. Discovery & Sharing**
+13\) Configure imagery and copy for high CTR; seed “share” prompts on key wins.
+14\) Track share → launch → play conversion; iterate creative based on performance. ([Base Documentation][6])
+
+**G. Compliance & Resilience**
+15\) Apply API rate-limit guards and exponential backoff to Neynar calls.
+16\) Optionally enforce **Neynar User Score** thresholds on spam-sensitive endpoints. ([docs.neynar.com][14])
+
+**H. Final Gate**
+17\) Run the Base **Launch Checklist**; fix any blockers before public announcement. ([Base Documentation][11])
+
+---
+
+## 13) Observable KPIs (First 14 Days)
+
+* **Embed CTR** (impressions → launches).
+* **Launch-to-first-play** conversion.
+* **Share rate** per session and per win moment.
+* **Retention** D1/D7; **Notifications open rate**; **Onchain completion rate** when applicable.
+* **Error rate** on manifest/embeds (should be 0) and auth error rate (target <1%). ([Base Documentation][6], [docs.neynar.com][5])
+
+---
+
+## 14) High-Confidence Pitfalls to Avoid
+
+* Serving an unsigned or partially filled **farcaster.json**; forgetting **webhookUrl**. ([docs.neynar.com][1])
+* Missing or malformed **fc\:frame** metadata; embeds without **launch**. ([Base Documentation][4])
+* Treating MiniKit **context** as authentication; gating wallet too early. ([Base Documentation][8])
+* Notifications without cohorting/relevance; exceeding rate limits; not honoring remove/revoke events. ([docs.neynar.com][5])
+
+---
+
+## 15) Reference (Authoritative Docs)
+
+* **Convert a Web App to a Farcaster Mini App** — steps, manifest signing, embed metadata. ([docs.neynar.com][1])
+* **Send Notifications to Mini App Users (Neynar)** — webhookUrl, add/remove lifecycle, analytics. ([docs.neynar.com][5])
+* **Base Mini Apps → Manifest, Links, Embeds & Previews** — spec for discovery and sharing. ([Base Documentation][2])
+* **Authentication guidance (Base)** — SIWF/Quick Auth vs wallet; do/don’t patterns. ([Base Documentation][8])
+* **Search & Discovery / Launch Checklist / Debugging** — ranking inputs, validation tools, common issues. ([Base Documentation][10])
+* **Neynar Rate Limits & User Score** — platform limits; quality-gating. ([docs.neynar.com][14])
+* **Build Viral Mini Apps (Neynar & Base)** — creative and loop design principles. ([Base Documentation][15])
+
+---
+
+### Final Acceptance Snapshot
+
+* **Manifest**: live, signed, valid; images resolve; events webhook set. ([docs.neynar.com][1])
+* **Embed**: share renders rich card with functional launch; validated via tool. ([Base Documentation][7])
+* **Auth**: context for analytics; cryptographic auth for secure ops; smooth Base App journeys. ([Base Documentation][8])
+* **Notifications**: opt-in captured; cohorts defined; analytics tracking open/CTR. ([docs.neynar.com][5])
+* **Growth**: share prompts wired to accomplishment beats; discovery surfaces populated. ([Base Documentation][6])
+
+This is everything an agent needs to take `Base_game` from web app to best-in-class mini app without touching prior research, while adding the depth required for an industry-standard launch.
+
+[1]: https://docs.neynar.com/docs/convert-web-app-to-mini-app?utm_source=chatgpt.com "Convert a Web App to a Farcaster Mini App"
+[2]: https://docs.base.org/mini-apps/features/manifest "Manifest - Base Documentation"
+[3]: https://docs.base.org/mini-apps/quickstart/new-apps/create-manifest?utm_source=chatgpt.com "Create Manifest - Base Documentation"
+[4]: https://docs.base.org/base-app/build-with-minikit/debugging?utm_source=chatgpt.com "Common Issues & Debugging"
+[5]: https://docs.neynar.com/docs/send-notifications-to-mini-app-users?utm_source=chatgpt.com "Send Notifications to Mini App Users"
+[6]: https://docs.base.org/mini-apps/features/embeds-and-previews?utm_source=chatgpt.com "Embeds & Previews - Base Documentation"
+[7]: https://docs.base.org/mini-apps/quickstart/existing-apps/test-and-deploy?utm_source=chatgpt.com "Test & Deploy - Base Documentation"
+[8]: https://docs.base.org/mini-apps/features/Authentication "Authentication - Base Documentation"
+[9]: https://docs.base.org/mini-apps/features/sharing-and-social-graph?utm_source=chatgpt.com "Sharing & Social Graph"
+[10]: https://docs.base.org/base-app/guides/search-and-discovery?utm_source=chatgpt.com "Mini App Search and Discovery"
+[11]: https://docs.base.org/mini-apps/quickstart/launch-checklist?utm_source=chatgpt.com "Launch Checklist - Base Documentation"
+[12]: https://docs.base.org/mini-apps/features/links "Links - Base Documentation"
+[13]: https://docs.neynar.com/docs/neynar-user-quality-score?utm_source=chatgpt.com "Neynar User Score"
+[14]: https://docs.neynar.com/reference/what-are-the-rate-limits-on-neynar-apis?utm_source=chatgpt.com "Rate Limits"
+[15]: https://docs.base.org/mini-apps/growth/build-viral-mini-apps?utm_source=chatgpt.com "Build Viral Mini Apps"

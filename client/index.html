@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#1f2937" />
+
+  <!-- Base Mini App Meta Tags -->
+  <meta name="description"
+    content="Space Dodger - Play and earn on Base blockchain. Dodge asteroids, collect power-ups, and climb the leaderboards!" />
+  <meta name="keywords" content="space, dodger, game, base, blockchain, web3, arcade, nft" />
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Space Dodger - Arcade Game on Base" />
+  <meta property="og:description"
+    content="Play Space Dodger and earn rewards on Base blockchain. Dodge asteroids and climb the leaderboards!" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/game-preview.png" />
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Space Dodger - Arcade Game on Base" />
+  <meta name="twitter:description" content="Play Space Dodger and earn rewards on Base blockchain!" />
+  <meta name="twitter:image" content="/game-preview.png" />
+
+  <title>Space Dodger - Arcade Game on Base</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body,
+    #root {
+      height: 100%;
+      width: 100%;
+      position: fixed;
+    }
+  </style>
+  <!-- Farcaster Frame Metadata -->
+  <meta name="fc:frame" content='{"version":"next","imageUrl":"https://${REPL_SLUG}.${REPL_OWNER}.repl.co/preview.png","button":{"title":"🚀 Play Space Dodger","action":{"type":"launch_miniapp","url":"https://${REPL_SLUG}.${REPL_OWNER}.repl.co"}}}' />
+  
+  <!-- Base Mini App -->
+  <meta name="base:miniapp" content="true" />
+  <meta name="base:chain" content="8453" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Space Dodger - Play on Base" />
+  <meta property="og:description" content="🚀 Dodge asteroids, earn rewards on Base blockchain! Built for Farcaster." />
+  <meta property="og:image" content="https://${REPL_SLUG}.${REPL_OWNER}.repl.co/preview.png" />
+  <meta property="og:url" content="https://${REPL_SLUG}.${REPL_OWNER}.repl.co" />
+  <meta property="og:type" content="game" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Space Dodger - Play on Base" />
+  <meta name="twitter:description" content="🚀 Dodge asteroids, earn rewards on Base blockchain!" />
+  <meta name="twitter:image" content="https://${REPL_SLUG}.${REPL_OWNER}.repl.co/preview.png" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

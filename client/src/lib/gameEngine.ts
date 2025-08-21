@@ -9,6 +9,9 @@ export class GameEngine {
   private animationId: number | null = null;
   private lastTime = 0;
   private keys: Record<string, boolean> = {};
+  private touchStartX: number | null = null;
+  private touchCurrentX: number | null = null;
+  private isTouching = false;
   
   private spaceship: Spaceship;
   private asteroids: Asteroid[] = [];
@@ -60,16 +63,49 @@ export class GameEngine {
       this.keys[event.code] = false;
     };
 
+    const handleTouchStart = (event: TouchEvent) => {
+      event.preventDefault();
+      const touch = event.touches[0];
+      this.touchStartX = touch.clientX;
+      this.touchCurrentX = touch.clientX;
+      this.isTouching = true;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      event.preventDefault();
+      if (!this.isTouching) return;
+      
+      const touch = event.touches[0];
+      this.touchCurrentX = touch.clientX;
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      event.preventDefault();
+      this.isTouching = false;
+      this.touchStartX = null;
+      this.touchCurrentX = null;
+    };
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("touchstart", handleTouchStart, { passive: false });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd, { passive: false });
+    window.addEventListener("touchcancel", handleTouchEnd, { passive: false });
 
     // Store references for cleanup
     this.keyDownHandler = handleKeyDown;
     this.keyUpHandler = handleKeyUp;
+    this.touchStartHandler = handleTouchStart;
+    this.touchMoveHandler = handleTouchMove;
+    this.touchEndHandler = handleTouchEnd;
   }
 
   private keyDownHandler!: (event: KeyboardEvent) => void;
   private keyUpHandler!: (event: KeyboardEvent) => void;
+  private touchStartHandler!: (event: TouchEvent) => void;
+  private touchMoveHandler!: (event: TouchEvent) => void;
+  private touchEndHandler!: (event: TouchEvent) => void;
 
   start() {
     if (this.animationId === null) {
@@ -89,6 +125,10 @@ export class GameEngine {
     this.stop();
     window.removeEventListener("keydown", this.keyDownHandler);
     window.removeEventListener("keyup", this.keyUpHandler);
+    window.removeEventListener("touchstart", this.touchStartHandler);
+    window.removeEventListener("touchmove", this.touchMoveHandler);
+    window.removeEventListener("touchend", this.touchEndHandler);
+    window.removeEventListener("touchcancel", this.touchEndHandler);
   }
 
   private gameLoop = (currentTime: number = performance.now()) => {
@@ -164,11 +204,24 @@ export class GameEngine {
   private handleInput() {
     const moveSpeed = 400; // pixels per second
     
+    // Handle keyboard input
     if (this.keys["ArrowLeft"] || this.keys["KeyA"]) {
       this.spaceship.moveLeft(moveSpeed);
     }
     if (this.keys["ArrowRight"] || this.keys["KeyD"]) {
       this.spaceship.moveRight(moveSpeed);
+    }
+    
+    // Handle touch input
+    if (this.isTouching && this.touchCurrentX !== null) {
+      // Calculate the desired spaceship position based on touch
+      const spaceshipCenterX = this.touchCurrentX - this.spaceship.width / 2;
+      
+      // Clamp to canvas bounds
+      const clampedX = Math.max(0, Math.min(this.canvas.width - this.spaceship.width, spaceshipCenterX));
+      
+      // Set spaceship position directly for responsive touch control
+      this.spaceship.setPosition(clampedX);
     }
   }
 

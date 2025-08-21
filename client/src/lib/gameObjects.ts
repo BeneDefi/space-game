@@ -52,6 +52,11 @@ export class Spaceship extends GameObject {
     return this.invincibleTime > 0;
   }
 
+  setPosition(x: number) {
+    this.x = x;
+    this.velocity = 0; // Stop any existing momentum when setting position directly
+  }
+
   render(ctx: CanvasRenderingContext2D) {
     const isInvincible = this.isInvincible();
     

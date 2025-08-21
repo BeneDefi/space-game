@@ -6,6 +6,23 @@ export default function GameUI() {
   const { score, lives, timeAlive, difficultyLevel, isPaused, pause, resume, gamePhase } = useGameState();
   const { isMuted, toggleMute } = useAudio();
 
+  const handlePauseToggle = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isPaused) {
+      resume();
+    } else {
+      pause();
+    }
+  };
+
+  const handleSoundToggle = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleMute();
+  };
+
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* Pause Overlay */}
@@ -15,8 +32,18 @@ export default function GameUI() {
             <h2 className="text-4xl font-bold mb-4">PAUSED</h2>
             <p className="text-lg mb-6">Tap Resume or press ESC to continue</p>
             <button
-              onClick={resume}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-2xl shadow-green-500/30"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                resume();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                resume();
+              }}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-2xl shadow-green-500/30 active:scale-95"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               ▶️ Resume Game
             </button>
@@ -82,10 +109,9 @@ export default function GameUI() {
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 pointer-events-auto">
         {/* Pause/Resume Button */}
         <button
-          onClick={isPaused ? resume : pause}
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchEnd={(e) => e.stopPropagation()}
-          className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md rounded-xl p-3 border border-yellow-500/40 shadow-2xl shadow-yellow-500/30 text-white active:scale-95 transition-all duration-200 touch-manipulation"
+          onClick={handlePauseToggle}
+          onTouchEnd={handlePauseToggle}
+          className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md rounded-xl p-3 border border-yellow-500/40 shadow-2xl shadow-yellow-500/30 text-white active:scale-95 transition-all duration-200 touch-manipulation select-none"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <div className="p-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg">
@@ -99,10 +125,9 @@ export default function GameUI() {
 
         {/* Sound Toggle Button */}
         <button
-          onClick={toggleMute}
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchEnd={(e) => e.stopPropagation()}
-          className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md rounded-xl p-3 border border-violet-500/40 shadow-2xl shadow-violet-500/30 text-white active:scale-95 transition-all duration-200 touch-manipulation"
+          onClick={handleSoundToggle}
+          onTouchEnd={handleSoundToggle}
+          className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md rounded-xl p-3 border border-violet-500/40 shadow-2xl shadow-violet-500/30 text-white active:scale-95 transition-all duration-200 touch-manipulation select-none"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <div className="p-1 bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg">

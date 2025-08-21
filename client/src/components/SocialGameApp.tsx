@@ -28,7 +28,7 @@ export default function SocialGameApp() {
     // Simulate app loading
     const loadTimer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 3000);
 
     return () => clearTimeout(loadTimer);
   }, [initialize]);
@@ -49,6 +49,8 @@ export default function SocialGameApp() {
         return <GameScreen />;
     }
   };
+
+  const showBottomNav = !(currentScreen === "game" && gamePhase === "playing");
 
   // Loading screen
   if (isLoading) {
@@ -75,12 +77,22 @@ export default function SocialGameApp() {
   }
 
   return (
-    <div className="h-screen bg-gray-900 flex flex-col max-w-md mx-auto">
-      <div className="flex-1 overflow-hidden">
-        {renderScreen()}
+    <div className="h-screen bg-gray-900 flex flex-col max-w-md mx-auto relative">
+      {/* Main content area with proper spacing for navigation */}
+      <div className={`flex-1 overflow-hidden ${showBottomNav ? 'pb-20' : ''}`}>
+        <div className="h-full">
+          {renderScreen()}
+        </div>
       </div>
-      {!(currentScreen === "game" && gamePhase === "playing") && (
-        <BottomNavigation activeTab={currentScreen} onTabChange={(tab) => setCurrentScreen(tab as Screen)} />
+      
+      {/* Bottom navigation - positioned at bottom */}
+      {showBottomNav && (
+        <div className="absolute bottom-0 left-0 right-0 z-50">
+          <BottomNavigation 
+            activeTab={currentScreen} 
+            onTabChange={(tab) => setCurrentScreen(tab as Screen)} 
+          />
+        </div>
       )}
     </div>
   );

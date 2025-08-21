@@ -78,41 +78,39 @@ export default function GameUI() {
         </div>
       </div>
 
-      {/* Bottom UI */}
-      <div className=" bottom-4 right-4 flex gap-3">
-        {/* Pause/Resume Toggle */}
+      {/* Mobile-friendly controls */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2 pointer-events-auto">
+        {/* Pause/Resume Button */}
         <button
           onClick={isPaused ? resume : pause}
-          className="pointer-events-auto group relative bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-md rounded-2xl p-4 border border-yellow-500/30 shadow-2xl shadow-yellow-500/20 text-white hover:border-yellow-400/50 transition-all duration-300 hover:scale-105"
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+          className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md rounded-xl p-3 border border-yellow-500/40 shadow-2xl shadow-yellow-500/30 text-white active:scale-95 transition-all duration-200 touch-manipulation"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
-          <div className="p-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl group-hover:from-yellow-400 group-hover:to-orange-400 transition-all duration-300">
+          <div className="p-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg">
             {isPaused ? (
-              <Play className="w-6 h-6 text-white" />
+              <Play className="w-5 h-5 text-white" />
             ) : (
-              <Pause className="w-6 h-6 text-white" />
+              <Pause className="w-5 h-5 text-white" />
             )}
-          </div>
-
-          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            {isPaused ? "Resume" : "Pause"}
           </div>
         </button>
 
-        {/* Sound Toggle */}
+        {/* Sound Toggle Button */}
         <button
           onClick={toggleMute}
-          className="pointer-events-auto group relative bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-md rounded-2xl p-4 border border-violet-500/30 shadow-2xl shadow-violet-500/20 text-white hover:border-violet-400/50 transition-all duration-300 hover:scale-105"
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+          className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md rounded-xl p-3 border border-violet-500/40 shadow-2xl shadow-violet-500/30 text-white active:scale-95 transition-all duration-200 touch-manipulation"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
-          <div className="p-2 bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl group-hover:from-violet-400 group-hover:to-purple-400 transition-all duration-300">
+          <div className="p-1 bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg">
             {isMuted ? (
-              <VolumeX className="w-6 h-6 text-white" />
+              <VolumeX className="w-5 h-5 text-white" />
             ) : (
-              <Volume2 className="w-6 h-6 text-white" />
+              <Volume2 className="w-5 h-5 text-white" />
             )}
-          </div>
-
-          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            {isMuted ? "Unmute" : "Mute"}
           </div>
         </button>
       </div>

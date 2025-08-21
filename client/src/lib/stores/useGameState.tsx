@@ -142,7 +142,7 @@ export const useGameState = create<GameState>()(
     addScore: (points: number) => {
       set((state) => {
         const now = Date.now();
-        
+
         // Basic input validation
         if (typeof points !== 'number' || isNaN(points) || points < 0) {
           console.warn('Invalid score points:', points);
@@ -165,13 +165,13 @@ export const useGameState = create<GameState>()(
         // Reasonable score validation based on game time
         const gameTime = (now - state.gameStartTime) / 1000;
         const maxReasonableScore = gameTime * 50; // Max ~50 points per second
-        
+
         if (state.score + points > maxReasonableScore) {
-          console.warn('Unreasonable score detected:', { 
-            gameTime, 
-            currentScore: state.score, 
+          console.warn('Unreasonable score detected:', {
+            gameTime,
+            currentScore: state.score,
             addingPoints: points,
-            maxReasonable: maxReasonableScore 
+            maxReasonable: maxReasonableScore
           });
           // Cap the points to reasonable amount
           points = Math.max(0, maxReasonableScore - state.score);
@@ -286,13 +286,21 @@ export const useGameState = create<GameState>()(
     },
 
     pause: () => {
-      set((state) => ({
-        isPaused: true
-      }));
+      set((state) => {
+        if (state.gamePhase === "playing") {
+          return { isPaused: true };
+        }
+        return {};
+      });
     },
 
     resume: () => {
-      set(() => ({ isPaused: false }));
+      set((state) => {
+        if (state.gamePhase === "playing") {
+          return { isPaused: false };
+        }
+        return {};
+      });
     }
   }))
 );

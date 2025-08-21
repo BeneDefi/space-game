@@ -12,22 +12,22 @@ export class GameEngine {
   private touchStartX: number | null = null;
   private touchCurrentX: number | null = null;
   private isTouching = false;
-  
+
   private spaceship: Spaceship;
   private asteroids: Asteroid[] = [];
   private powerUps: PowerUp[] = [];
-  
+
   private lastAsteroidSpawn = 0;
   private lastPowerUpSpawn = 0;
   private asteroidSpawnInterval = 2000; // milliseconds
   private powerUpSpawnInterval = 15000; // 15 seconds
-  
+
   private stars: Array<{ x: number; y: number; speed: number; size: number }> = [];
 
   constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     this.canvas = canvas;
     this.ctx = ctx;
-    
+
     this.spaceship = new Spaceship(canvas.width / 2, canvas.height - 80);
     this.initializeStars();
     this.setupEventListeners();
@@ -48,13 +48,24 @@ export class GameEngine {
   private setupEventListeners() {
     const handleKeyDown = (event: KeyboardEvent) => {
       this.keys[event.code] = true;
-      
+
       if (event.code === "Escape") {
+        event.preventDefault();
         const gameState = useGameState.getState();
         if (gameState.gamePhase === "playing") {
-          gameState.pause();
-        } else if (gameState.gamePhase === "paused") {
-          gameState.resume();
+          if (gameState.isPaused) {
+            gameState.resume();
+          } else {
+            gameState.pause();
+          }
+        }
+      }
+
+      // Prevent spacebar from scrolling the page during gameplay
+      if (event.code === "Space") {
+        const gameState = useGameState.getState();
+        if (gameState.gamePhase === "playing") {
+          event.preventDefault();
         }
       }
     };
@@ -74,7 +85,7 @@ export class GameEngine {
     const handleTouchMove = (event: TouchEvent) => {
       event.preventDefault();
       if (!this.isTouching) return;
-      
+
       const touch = event.touches[0];
       this.touchCurrentX = touch.clientX;
     };
@@ -133,16 +144,16 @@ export class GameEngine {
 
   private gameLoop = (currentTime: number = performance.now()) => {
     const gameState = useGameState.getState();
-    
+
     // Don't update game logic if paused
     if (gameState.gamePhase === "paused") {
       this.animationId = requestAnimationFrame(this.gameLoop);
       return;
     }
-    
+
     const deltaTime = (currentTime - this.lastTime) / 1000; // Convert to seconds
     this.lastTime = currentTime;
-    
+
     if (gameState.gamePhase !== "playing" || gameState.isPaused) {
       this.animationId = requestAnimationFrame(this.gameLoop);
       return;
@@ -156,7 +167,7 @@ export class GameEngine {
 
   private update(deltaTime: number) {
     const gameState = useGameState.getState();
-    
+
     // Update game time
     gameState.updateTime(deltaTime);
     gameState.updateDifficulty();
@@ -203,7 +214,7 @@ export class GameEngine {
 
   private handleInput() {
     const moveSpeed = 400; // pixels per second
-    
+
     // Handle keyboard input
     if (this.keys["ArrowLeft"] || this.keys["KeyA"]) {
       this.spaceship.moveLeft(moveSpeed);
@@ -211,15 +222,15 @@ export class GameEngine {
     if (this.keys["ArrowRight"] || this.keys["KeyD"]) {
       this.spaceship.moveRight(moveSpeed);
     }
-    
+
     // Handle touch input
     if (this.isTouching && this.touchCurrentX !== null) {
       // Calculate the desired spaceship position based on touch
       const spaceshipCenterX = this.touchCurrentX - this.spaceship.width / 2;
-      
+
       // Clamp to canvas bounds
       const clampedX = Math.max(0, Math.min(this.canvas.width - this.spaceship.width, spaceshipCenterX));
-      
+
       // Set spaceship position directly for responsive touch control
       this.spaceship.setPosition(clampedX);
     }
@@ -227,7 +238,7 @@ export class GameEngine {
 
   private spawnAsteroids(gameState: any) {
     const now = performance.now();
-    
+
     // Calculate spawn interval based on difficulty
     const baseInterval = 2000; // 2 seconds
     const minInterval = 300; // 0.3 seconds
@@ -240,7 +251,7 @@ export class GameEngine {
       const x = Math.random() * (this.canvas.width - 60) + 30;
       const speed = Math.min(400, 100 + (gameState.difficultyLevel - 1) * 20);
       const size = Math.random() * 30 + 20; // 20-50 pixels
-      
+
       this.asteroids.push(new Asteroid(x, -size, size, speed));
       this.lastAsteroidSpawn = now;
     }
@@ -248,7 +259,7 @@ export class GameEngine {
 
   private spawnPowerUps(gameState: any) {
     const now = performance.now();
-    
+
     // Only spawn power-ups after level 3
     if (gameState.difficultyLevel < 3) return;
 
@@ -256,7 +267,7 @@ export class GameEngine {
       const x = Math.random() * (this.canvas.width - 40) + 20;
       const types: ("shield" | "slowTime" | "scoreBoost")[] = ["shield", "slowTime", "scoreBoost"];
       const type = types[Math.floor(Math.random() * types.length)];
-      
+
       this.powerUps.push(new PowerUp(x, -20, type));
       this.lastPowerUpSpawn = now;
     }
@@ -268,11 +279,11 @@ export class GameEngine {
     // Check asteroid collisions
     for (let i = this.asteroids.length - 1; i >= 0; i--) {
       const asteroid = this.asteroids[i];
-      
+
       if (checkCollision(this.spaceship, asteroid)) {
         // Remove asteroid
         this.asteroids.splice(i, 1);
-        
+
         if (gameState.hasShield) {
           // Shield absorbs the hit
           gameState.removeShield();
@@ -281,7 +292,7 @@ export class GameEngine {
           // Player takes damage
           gameState.loseLife();
           audioState.playHit();
-          
+
           // Add temporary invincibility
           this.spaceship.setInvincible(1); // 1 second
         }
@@ -292,13 +303,13 @@ export class GameEngine {
     // Check power-up collisions
     for (let i = this.powerUps.length - 1; i >= 0; i--) {
       const powerUp = this.powerUps[i];
-      
+
       if (checkCollision(this.spaceship, powerUp)) {
         // Collect power-up
         this.powerUps.splice(i, 1);
         gameState.activatePowerUp(powerUp.type);
         audioState.playSuccess();
-        
+
         // Bonus points
         gameState.addScore(100);
         break;
@@ -309,7 +320,7 @@ export class GameEngine {
   private updateStars(deltaTime: number) {
     this.stars.forEach(star => {
       star.y += star.speed * deltaTime * 60; // 60fps baseline
-      
+
       if (star.y > this.canvas.height) {
         star.y = -star.size;
         star.x = Math.random() * this.canvas.width;
@@ -345,8 +356,8 @@ export class GameEngine {
       this.ctx.strokeStyle = "#00ffff";
       this.ctx.lineWidth = 3;
       this.ctx.beginPath();
-      this.ctx.arc(this.spaceship.x + this.spaceship.width / 2, 
-                  this.spaceship.y + this.spaceship.height / 2, 
+      this.ctx.arc(this.spaceship.x + this.spaceship.width / 2,
+                  this.spaceship.y + this.spaceship.height / 2,
                   35, 0, Math.PI * 2);
       this.ctx.stroke();
     }

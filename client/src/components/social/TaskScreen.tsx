@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { CheckCircle, ExternalLink, Twitter, Instagram, Share2, Users, Gift, Calendar } from "lucide-react";
+import { CheckCircle, ExternalLink, Twitter, Instagram, Share2, Users, Gift, Calendar, Flame, Trophy } from "lucide-react";
 import { useGameState } from "../../lib/stores/useGameState";
 
 interface Task {
@@ -12,6 +13,13 @@ interface Task {
   icon: React.ReactNode;
   action?: string;
   link?: string;
+}
+
+interface LoginStreak {
+  currentStreak: number;
+  lastLoginDate: string;
+  totalDays: number;
+  longestStreak: number;
 }
 
 export default function TaskScreen() {
@@ -77,6 +85,14 @@ export default function TaskScreen() {
 
   const [totalEarned, setTotalEarned] = useState(0);
   const [completedToday, setCompletedToday] = useState(0);
+  const [loginStreak, setLoginStreak] = useState<LoginStreak>({
+    currentStreak: 0,
+    lastLoginDate: "",
+    totalDays: 0,
+    longestStreak: 0
+  });
+  const [canClaimDaily, setCanClaimDaily] = useState(false);
+  const [dailyReward, setDailyReward] = useState(50);
 
   useEffect(() => {
     // Load completed tasks from localStorage
@@ -90,16 +106,126 @@ export default function TaskScreen() {
         }))
       );
     }
+
+    // Initialize login streak system
+    initializeLoginStreak();
   }, []);
+
+  const initializeLoginStreak = () => {
+    const today = new Date().toDateString();
+    const savedStreak = localStorage.getItem('loginStreak');
+    
+    if (savedStreak) {
+      const streak = JSON.parse(savedStreak) as LoginStreak;
+      const lastLogin = new Date(streak.lastLoginDate);
+      const todayDate = new Date(today);
+      const daysDiff = Math.floor((todayDate.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysDiff === 0) {
+        // Already logged in today
+        setLoginStreak(streak);
+        setCanClaimDaily(false);
+      } else if (daysDiff === 1) {
+        // Consecutive day - can claim and increment streak
+        setCanClaimDaily(true);
+        setLoginStreak(streak);
+      } else if (daysDiff > 1) {
+        // Streak broken - reset to 0, can claim for new streak
+        const resetStreak = {
+          ...streak,
+          currentStreak: 0,
+          totalDays: streak.totalDays + 1
+        };
+        setLoginStreak(resetStreak);
+        setCanClaimDaily(true);
+      }
+    } else {
+      // First time user
+      setCanClaimDaily(true);
+      setLoginStreak({
+        currentStreak: 0,
+        lastLoginDate: "",
+        totalDays: 0,
+        longestStreak: 0
+      });
+    }
+
+    // Calculate daily reward based on current streak
+    updateDailyReward();
+  };
+
+  const updateDailyReward = () => {
+    const baseReward = 50;
+    const streakBonus = Math.min(loginStreak.currentStreak * 10, 200); // Max bonus of 200
+    const milestoneBonus = getMilestoneBonus(loginStreak.currentStreak + 1);
+    setDailyReward(baseReward + streakBonus + milestoneBonus);
+  };
+
+  const getMilestoneBonus = (streak: number): number => {
+    if (streak >= 30) return 500; // Monthly milestone
+    if (streak >= 14) return 200; // Bi-weekly milestone
+    if (streak >= 7) return 100;  // Weekly milestone
+    if (streak >= 3) return 50;   // 3-day milestone
+    return 0;
+  };
+
+  const getStreakTier = (streak: number): string => {
+    if (streak >= 30) return "🏆 Legend";
+    if (streak >= 21) return "💎 Diamond";
+    if (streak >= 14) return "🥇 Gold";
+    if (streak >= 7) return "🥈 Silver";
+    if (streak >= 3) return "🥉 Bronze";
+    return "🌟 Novice";
+  };
+
+  const claimDailyLogin = () => {
+    if (!canClaimDaily) return;
+
+    const today = new Date().toDateString();
+    const newStreak = loginStreak.currentStreak + 1;
+    const newLoginStreak: LoginStreak = {
+      currentStreak: newStreak,
+      lastLoginDate: today,
+      totalDays: loginStreak.totalDays + 1,
+      longestStreak: Math.max(loginStreak.longestStreak, newStreak)
+    };
+
+    // Save streak data
+    localStorage.setItem('loginStreak', JSON.stringify(newLoginStreak));
+    setLoginStreak(newLoginStreak);
+    setCanClaimDaily(false);
+
+    // Award points
+    addScore(dailyReward);
+    setTotalEarned(prev => prev + dailyReward);
+    setCompletedToday(prev => prev + 1);
+
+    // Mark daily login task as completed
+    completeTask('daily_login');
+
+    // Show celebration for milestones
+    if ([3, 7, 14, 21, 30].includes(newStreak)) {
+      showMilestoneCelebration(newStreak);
+    }
+  };
+
+  const showMilestoneCelebration = (streak: number) => {
+    // Simple alert for now - could be enhanced with a modal
+    const tier = getStreakTier(streak);
+    const bonus = getMilestoneBonus(streak);
+    alert(`🎉 Streak Milestone! ${tier}\n${streak} days in a row!\nBonus: +${bonus} points!`);
+  };
 
   const completeTask = (taskId: string) => {
     setTasks(prevTasks => {
       const updatedTasks = prevTasks.map(task => {
         if (task.id === taskId && !task.completed) {
           // Add points to game score
-          addScore(task.reward);
-          setTotalEarned(prev => prev + task.reward);
-          setCompletedToday(prev => prev + 1);
+          if (taskId !== 'daily_login') { // Daily login points already added
+            addScore(task.reward);
+            setTotalEarned(prev => prev + task.reward);
+            setCompletedToday(prev => prev + 1);
+          }
           
           // Save to localStorage
           const completedTaskIds = JSON.parse(localStorage.getItem('completedTasks') || '[]');
@@ -147,6 +273,48 @@ export default function TaskScreen() {
         <div className="text-center mb-4">
           <h1 className="text-2xl font-bold mb-1">Earn Points</h1>
           <p className="text-gray-400 text-sm">Complete tasks to earn rewards</p>
+        </div>
+
+        {/* Login Streak Section */}
+        <div className="mb-4 p-4 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-xl border border-orange-500/30">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Flame className="text-orange-400" size={20} />
+              <h3 className="font-bold text-lg">Daily Login Streak</h3>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-300">{getStreakTier(loginStreak.currentStreak)}</div>
+              <div className="text-2xl font-bold text-orange-400">{loginStreak.currentStreak}</div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+            <div className="text-center">
+              <div className="text-gray-400">Total Days</div>
+              <div className="font-medium">{loginStreak.totalDays}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-gray-400">Best Streak</div>
+              <div className="font-medium">{loginStreak.longestStreak}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-gray-400">Today's Reward</div>
+              <div className="font-medium text-yellow-400">+{dailyReward}</div>
+            </div>
+          </div>
+
+          {canClaimDaily ? (
+            <button
+              onClick={claimDailyLogin}
+              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 py-2 px-4 rounded-lg font-medium transition-all duration-200 transform hover:scale-105"
+            >
+              🎁 Claim Daily Reward (+{dailyReward} points)
+            </button>
+          ) : (
+            <div className="w-full bg-gray-600/50 py-2 px-4 rounded-lg text-center text-gray-400">
+              ✅ Today's reward claimed! Come back tomorrow
+            </div>
+          )}
         </div>
 
         {/* Stats */}

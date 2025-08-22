@@ -1,7 +1,7 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingBag, Star, Lock, Coins } from "lucide-react";
 import { useGameState } from "../../lib/stores/useGameState";
+import { useFarcaster } from "../../lib/stores/useFarcaster";
 
 const storeCategories = [
   { id: "skins", name: "Spaceship Skins", icon: "🚀" },
@@ -39,21 +39,47 @@ const storeItems = {
 
 export default function StoreScreen() {
   const [selectedCategory, setSelectedCategory] = useState("skins");
-  const { score, highScore, addScore } = useGameState();
+  const { totalCoinsEarned, spendCoins, getAvailableCoins } = useGameState();
   const [ownedItems, setOwnedItems] = useState<string[]>([]);
-  
-  // Use total accumulated coins (high score represents total coins earned)
-  const totalCoins = Math.floor(highScore / 10); // Convert score to coins (10 points = 1 coin)
-  const [spentCoins, setSpentCoins] = useState(0);
-  const availableCoins = totalCoins - spentCoins;
+  const { isAuthenticated, user } = useFarcaster();
+
+  // Check authentication
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="h-full bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="text-center text-white">
+          <ShoppingBag size={48} className="mx-auto mb-4 text-purple-400" />
+          <h2 className="text-xl font-bold mb-2">Store Access Restricted</h2>
+          <p className="text-gray-300">Please authenticate with Farcaster to access the store.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const availableCoins = getAvailableCoins();
+  const spentCoins = totalCoinsEarned - availableCoins;
+
+  // Load owned items on component mount
+  useEffect(() => {
+    const savedItems = localStorage.getItem('ownedStoreItems');
+    if (savedItems) {
+      setOwnedItems(JSON.parse(savedItems));
+    }
+  }, []);
 
   const handlePurchase = (item: any) => {
-    if (availableCoins >= item.price && !ownedItems.includes(item.id)) {
-      setSpentCoins(prev => prev + item.price);
-      setOwnedItems(prev => [...prev, item.id]);
-      
-      // Show purchase confirmation
-      console.log(`Successfully purchased ${item.name} for ${item.price} coins!`);
+    if (availableCoins >= (item.price || 0) && !ownedItems.includes(item.id)) {
+      const success = spendCoins(item.price || 0);
+      if (success) {
+        setOwnedItems(prev => [...prev, item.id]);
+
+        // Save owned items to localStorage
+        const updatedOwned = [...ownedItems, item.id];
+        localStorage.setItem('ownedStoreItems', JSON.stringify(updatedOwned));
+
+        // Show purchase confirmation
+        console.log(`Successfully purchased ${item.name} for ${(item.price || 0)} coins!`);
+      }
     }
   };
 
@@ -69,7 +95,7 @@ export default function StoreScreen() {
           </h1>
           <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-orange-600 px-4 py-2 rounded-full shadow-lg">
             <Coins size={18} className="text-yellow-100" />
-            <span className="font-bold text-yellow-100">{availableCoins.toLocaleString()}</span>
+            <span className="font-bold text-yellow-100">{(availableCoins || 0).toLocaleString()}</span>
           </div>
         </div>
 
@@ -77,14 +103,14 @@ export default function StoreScreen() {
         <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl">
           <div className="flex justify-between items-center text-sm">
             <span className="text-blue-300">Total Earned:</span>
-            <span className="text-blue-200 font-medium">{totalCoins.toLocaleString()} coins</span>
+            <span className="text-blue-200 font-medium">{(totalCoinsEarned || 0).toLocaleString()} coins</span>
           </div>
           <div className="flex justify-between items-center text-sm mt-1">
             <span className="text-gray-300">Spent:</span>
-            <span className="text-red-300 font-medium">{spentCoins.toLocaleString()} coins</span>
+            <span className="text-red-300 font-medium">{(spentCoins || 0).toLocaleString()} coins</span>
           </div>
         </div>
-        
+
         {/* Categories */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {storeCategories.map(category => (
@@ -109,8 +135,8 @@ export default function StoreScreen() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {storeItems[selectedCategory as keyof typeof storeItems].map((item) => {
             const owned = isItemOwned(item.id);
-            const canAfford = availableCoins >= item.price;
-            
+            const canAfford = availableCoins >= (item.price || 0);
+
             return (
               <div key={item.id} className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 relative border border-gray-600/30 hover:border-purple-500/50 transition-all">
                 {item.premium && (
@@ -118,13 +144,13 @@ export default function StoreScreen() {
                     PREMIUM
                   </div>
                 )}
-                
+
                 <div className="text-center mb-4">
                   <div className="text-4xl mb-3 transform hover:scale-110 transition-transform">{item.icon}</div>
                   <h3 className="font-medium text-sm mb-2 text-gray-100">{item.name}</h3>
                   <div className="flex items-center justify-center gap-1 text-yellow-400">
                     <Coins size={14} />
-                    <span className="text-sm font-bold">{item.price}</span>
+                    <span className="text-sm font-bold">{(item.price || 0).toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -152,7 +178,7 @@ export default function StoreScreen() {
                   ) : (
                     <div className="flex items-center justify-center gap-2">
                       <Lock size={14} />
-                      Need {(item.price - availableCoins).toLocaleString()}
+                      Need {((item.price || 0) - availableCoins).toLocaleString()}
                     </div>
                   )}
                 </button>
@@ -166,7 +192,7 @@ export default function StoreScreen() {
           <div className="mt-6 p-4 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 rounded-2xl text-center">
             <h3 className="font-bold text-purple-300 mb-2">Need More Coins?</h3>
             <p className="text-sm text-gray-300">
-              Play the game to earn more coins! Every 10 points = 1 coin
+              Play the game to earn more coins! Every 100 points = 1 coin
             </p>
           </div>
         )}

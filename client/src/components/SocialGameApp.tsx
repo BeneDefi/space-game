@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useWallet } from "../lib/stores/useWallet";
 import { useGameState } from "../lib/stores/useGameState";
 import WalletConnect from "./WalletConnect";
-import LeaderboardScreen from "./social/LeaderboardScreen";
+import RankingScreen from './social/RankingScreen';
 import GameScreen from "./social/GameScreen";
 import StoreScreen from "./social/StoreScreen";
 import ProfileScreen from "./social/ProfileScreen";
 import TaskScreen from "./social/TaskScreen";
 import BottomNavigation from "./social/BottomNavigation";
 import { useFarcaster } from "../lib/stores/useFarcaster";
-import { Loader2 } from "lucide-react";
+import { Loader2, Shield, AlertCircle } from "lucide-react";
 
 type Screen = "game" | "store" | "ranking" | "profile" | "tasks";
 
@@ -18,13 +18,13 @@ export default function SocialGameApp() {
   const { isConnected } = useWallet();
   const [showGame, setShowGame] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { initialize } = useFarcaster();
+  const { initialize, isAuthenticated, user, signIn, error, isLoading: farcasterLoading } = useFarcaster();
   const { gamePhase } = useGameState();
 
   useEffect(() => {
     // Initialize Farcaster context when app loads
     initialize();
-    
+
     // Simulate app loading
     const loadTimer = setTimeout(() => {
       setIsLoading(false);
@@ -40,7 +40,7 @@ export default function SocialGameApp() {
       case "store":
         return <StoreScreen />;
       case "ranking":
-        return <LeaderboardScreen />;
+        return <RankingScreen />;
       case "profile":
         return <ProfileScreen />;
       case "tasks":
@@ -76,6 +76,53 @@ export default function SocialGameApp() {
     return <WalletConnect onConnected={() => setShowGame(true)} />;
   }
 
+  // Farcaster Authentication Check
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center max-w-md mx-auto p-4">
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 text-center text-white border border-gray-700 max-w-sm w-full">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield size={32} />
+          </div>
+          
+          <h2 className="text-2xl font-bold mb-2">Farcaster Required</h2>
+          <p className="text-gray-300 mb-6">
+            This game requires Farcaster authentication to access social features, leaderboards, and score submission.
+          </p>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4 flex items-center gap-2">
+              <AlertCircle size={16} className="text-red-400" />
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          <button
+            onClick={signIn}
+            disabled={farcasterLoading}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl py-3 px-6 font-medium transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            {farcasterLoading ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              <>
+                <Shield size={20} />
+                Sign in with Farcaster
+              </>
+            )}
+          </button>
+
+          <p className="text-xs text-gray-500 mt-4">
+            Farcaster integration enables social features, score sharing, and leaderboard participation.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen bg-gray-900 flex flex-col max-w-md mx-auto relative">
       {/* Main content area with proper spacing for navigation */}
@@ -84,7 +131,7 @@ export default function SocialGameApp() {
           {renderScreen()}
         </div>
       </div>
-      
+
       {/* Bottom navigation - positioned at bottom */}
       {showBottomNav && (
         <div className="absolute bottom-0 left-0 right-0 z-50">

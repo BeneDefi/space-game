@@ -29,6 +29,10 @@ interface GameState {
   difficultyLevel: number;
   highScore: number;
 
+  // Coins system
+  coinsEarned: number;
+  totalCoinsEarned: number;
+
   // Power-ups
   activePowerUps: ActivePowerUp[];
   hasShield: boolean;
@@ -52,6 +56,11 @@ interface GameState {
   updateTime: (deltaTime: number) => void;
   updateDifficulty: () => void;
 
+  // Coin actions
+  earnCoins: (amount: number) => void;
+  spendCoins: (amount: number) => boolean;
+  getAvailableCoins: () => number;
+
   // Power-up actions
   activatePowerUp: (type: PowerUpType) => void;
   updatePowerUps: (deltaTime: number) => void;
@@ -70,7 +79,11 @@ export const useGameState = create<GameState>()(
     lives: 3,
     timeAlive: 0,
     difficultyLevel: 1,
-    highScore: 0,
+    highScore: getLocalStorage("spaceDodgerHighScore", 0),
+
+    // Coins system
+    coinsEarned: 0,
+    totalCoinsEarned: getLocalStorage("spaceDodgerTotalCoins", 0),
 
     activePowerUps: [],
     hasShield: false,
@@ -104,6 +117,7 @@ export const useGameState = create<GameState>()(
         lives: 3,
         timeAlive: 0,
         difficultyLevel: 1,
+        coinsEarned: 0,
         activePowerUps: [],
         hasShield: false,
         isPaused: false,
@@ -117,22 +131,28 @@ export const useGameState = create<GameState>()(
       set((state) => {
         if (state.gamePhase === "playing") {
           const newHighScore = Math.max(state.score, state.highScore);
+          const newTotalCoins = state.totalCoinsEarned + state.coinsEarned;
+          
           if (newHighScore > state.highScore) {
             setLocalStorage("spaceDodgerHighScore", newHighScore);
           }
+          
+          setLocalStorage("spaceDodgerTotalCoins", newTotalCoins);
 
           // Dispatch a custom event to notify profile about game end
           window.dispatchEvent(new CustomEvent('gameEnd', {
             detail: {
               score: state.score,
               timeAlive: state.timeAlive,
-              difficultyLevel: state.difficultyLevel
+              difficultyLevel: state.difficultyLevel,
+              coinsEarned: state.coinsEarned
             }
           }));
 
           return {
             gamePhase: "ended",
-            highScore: newHighScore
+            highScore: newHighScore,
+            totalCoinsEarned: newTotalCoins
           };
         }
         return {};
@@ -188,11 +208,15 @@ export const useGameState = create<GameState>()(
         const multiplier = state.activePowerUps.some(p => p.type === "scoreBoost") ? 2 : 1;
         const finalPoints = points * multiplier;
 
+        // Calculate coins earned (1 coin per 100 points)
+        const coinsFromScore = Math.floor(finalPoints / 100);
+
         // Update score events for rate limiting
         const updatedScoreEvents = [...recentEvents, now];
 
         return {
           score: state.score + finalPoints,
+          coinsEarned: state.coinsEarned + coinsFromScore,
           scoreEvents: updatedScoreEvents,
           lastScoreTime: now
         };
@@ -301,6 +325,36 @@ export const useGameState = create<GameState>()(
         }
         return {};
       });
+    },
+
+    earnCoins: (amount: number) => {
+      set((state) => {
+        if (typeof amount !== 'number' || amount < 0 || isNaN(amount)) {
+          console.warn('Invalid coin amount:', amount);
+          return {};
+        }
+        
+        const newCoinsEarned = state.coinsEarned + Math.floor(amount);
+        return { coinsEarned: newCoinsEarned };
+      });
+    },
+
+    spendCoins: (amount: number) => {
+      const state = get();
+      const availableCoins = state.totalCoinsEarned - getLocalStorage("spaceDodgerSpentCoins", 0);
+      
+      if (availableCoins >= amount && amount > 0) {
+        const currentSpent = getLocalStorage("spaceDodgerSpentCoins", 0);
+        setLocalStorage("spaceDodgerSpentCoins", currentSpent + amount);
+        return true;
+      }
+      return false;
+    },
+
+    getAvailableCoins: () => {
+      const state = get();
+      const spentCoins = getLocalStorage("spaceDodgerSpentCoins", 0);
+      return Math.max(0, state.totalCoinsEarned - spentCoins);
     }
   }))
 );

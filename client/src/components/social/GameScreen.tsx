@@ -6,17 +6,51 @@ import GameUI from "../GameUI";
 import StartScreen from "../StartScreen";
 import GameOverScreen from "../GameOverScreen";
 import { ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
+import { AlertCircle } from "lucide-react"; // Added AlertCircle import
 
 interface GameScreenProps {
   onBack?: () => void;
 }
 
 export default function GameScreen({ onBack }: GameScreenProps) {
-  const { gamePhase, start, pause, resume, restart } = useGameState();
+  const { 
+    gamePhase, 
+    score, 
+    highScore,
+    lives, 
+    timeAlive, 
+    difficultyLevel,
+    coinsEarned,
+    start, 
+    restart,
+    isPaused,
+    pause,
+    resume
+  } = useGameState();
   const { backgroundMusic, isMuted, setBackgroundMusic, setHitSound, setSuccessSound } = useAudio();
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollButtons, setShowScrollButtons] = useState(false);
+
+  // Check if user is properly authenticated
+  const { isAuthenticated, user } = useFarcaster();
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="h-full bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="text-center text-white">
+          <AlertCircle size={48} className="mx-auto mb-4 text-red-400" />
+          <h2 className="text-xl font-bold mb-2">Authentication Required</h2>
+          <p className="text-gray-300">Please sign in with Farcaster to access the game.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Helper function to format score (assuming this exists in the store or is defined elsewhere)
+  const formatScore = (score: number): string => {
+    return score.toString().padStart(5, '0');
+  };
 
   useEffect(() => {
     // Load audio assets if not already loaded
@@ -140,6 +174,26 @@ export default function GameScreen({ onBack }: GameScreenProps) {
       {/* Game UI and Controls */}
       {(gamePhase === "playing" || gamePhase === "paused") && (
         <>
+          <div className="p-4"> {/* Added a container for UI elements */}
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-400">{formatScore(score)}</div>
+                <div className="text-sm text-yellow-300">Score</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-400">{Math.floor(timeAlive)}s</div>
+                <div className="text-sm text-blue-300">Time</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400">{difficultyLevel}</div>
+                <div className="text-sm text-green-300">Level</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400">{coinsEarned}</div>
+                <div className="text-sm text-purple-300">Coins</div>
+              </div>
+            </div>
+          </div>
           <GameUI />
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
             {gamePhase === "playing" && (

@@ -5,7 +5,7 @@
     "signature": "MHhkNjliYWFkOTgzOTM4MWZiYzgwYWQwZmM3YWNjYTUzYTliNDYyMjhhYzk4NzUxY2YzMzIzNTAyZGUwOTQ4MDU3MDZlODZjY2JhM2UwNWI3Y2FjNmI1NzJkZDg5MGJlMTUzM2NhNDM5OGUxNjRiMDVhZTNiOTdhMTlhNWNjZWI0YTFj"
   },
   "miniapp": {
-    "version": "1.0.0",
+    "version": "0.0.1",
     "name": "Space Dodger",
     "homeUrl": "https://space-game-f7fe.onrender.com",
     "iconUrl": "https://space-game-f7fe.onrender.com/icon.png",

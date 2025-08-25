@@ -1,7 +1,11 @@
 {
     "rewrites": [
       { "source": "/api/:path*", "destination": "https://YOUR-BACKEND.onrailway.app/api/:path*" },
-      { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
+      { "source": "/((?!.*\\.).*)", "destination": "/index.html" },
+      {
+        "source": "/.well-known/farcaster.json",
+        "destination": "https://api.farcaster.xyz/miniapps/hosted-manifest/0198e088-1d96-e163-2028-60e9bd7d8cf7",
+        "permanent": false
+      }
     ]
   }
-  

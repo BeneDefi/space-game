@@ -1,14 +1,18 @@
-
 {
+  "accountAssociation": {
+    "header": "eyJmaWQiOjMyOTM3MCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDgxZUNlQjgzMDVlOTExODc4NjFBOTAyNzQ1OWRFM0M3RDY1MUJkNWYifQ",
+    "payload": "eyJkb21haW4iOiJzcGFjZS1nYW1lLWY3ZmUub25yZW5kZXIuY29tIn0",
+    "signature": "MHhkNjliYWFkOTgzOTM4MWZiYzgwYWQwZmM3YWNjYTUzYTliNDYyMjhhYzk4NzUxY2YzMzIzNTAyZGUwOTQ4MDU3MDZlODZjY2JhM2UwNWI3Y2FjNmI1NzJkZDg5MGJlMTUzM2NhNDM5OGUxNjRiMDVhZTNiOTdhMTlhNWNjZWI0YTFj"
+  },
   "miniapp": {
     "version": "1.0.0",
     "name": "Space Dodger",
-    "homeUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co",
-    "iconUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/icon.png",
-    "imageUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/preview.png",
+    "homeUrl": "https://space-game-f7fe.onrender.com",
+    "iconUrl": "https://space-game-f7fe.onrender.com/icon.png",
+    "imageUrl": "https://space-game-f7fe.onrender.com/preview.png",
     "buttonTitle": "🚀 Play Space Dodger",
-    "splashImageUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/splash.png",
+    "splashImageUrl": "https://space-game-f7fe.onrender.com/splash.png",
     "splashBackgroundColor": "#0052ff",
-    "webhookUrl": "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/api/webhooks/farcaster"
+    "webhookUrl": "https://space-game-f7fe.onrender.com/api/webhooks/farcaster"
   }
 }

@@ -54,7 +54,7 @@
   </style>
   <!-- Farcaster Frame Metadata -->
   <meta name="fc:frame" content='{"version":"next","imageUrl":"https://${REPL_SLUG}.${REPL_OWNER}.repl.co/preview.png","button":{"title":"🚀 Play Space Dodger","action":{"type":"launch_miniapp","url":"https://${REPL_SLUG}.${REPL_OWNER}.repl.co"}}}' />
-  
+
   <!-- Base Mini App -->
   <meta name="base:miniapp" content="true" />
   <meta name="base:chain" content="8453" />
@@ -71,6 +71,32 @@
   <meta name="twitter:title" content="Space Dodger - Play on Base" />
   <meta name="twitter:description" content="🚀 Dodge asteroids, earn rewards on Base blockchain!" />
   <meta name="twitter:image" content="https://${REPL_SLUG}.${REPL_OWNER}.repl.co/preview.png" />
+
+  <!-- Allow iframe embedding -->
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://*.farcaster.xyz https://*.warpcast.com https://warpcast.com;">
+
+  <!-- Prevent zoom on mobile for better frame experience -->
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- Add error handling script -->
+  <script>
+    window.addEventListener('error', function(e) {
+      console.error('Global error:', e.error, e.filename, e.lineno);
+    });
+
+    window.addEventListener('unhandledrejection', function(e) {
+      console.error('Unhandled rejection:', e.reason);
+    });
+
+    // Add MiniKit detection
+    if (typeof window !== 'undefined') {
+      window.__FARCASTER_CONTEXT__ = {
+        inFrame: window.parent !== window,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      };
+    }
+  </script>
 </head>
 
 <body>

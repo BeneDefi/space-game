@@ -1,7 +1,7 @@
 import { useGameState } from "../lib/stores/useGameState";
 import { Rocket, Shield, Clock, TrendingUp, Gamepad2, Zap, Play, ArrowLeft, ArrowRight } from "lucide-react";
 
-export default function StartScreen() {
+export default function StartScreen({ onStart }: { onStart: () => void }) {
   const { start } = useGameState();
 
   return (
@@ -28,7 +28,7 @@ export default function StartScreen() {
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-cyan-100">How to Play</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-left">
             <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 bg-slate-700/50 rounded-xl border border-slate-600/50">
               <div className="flex gap-2">
@@ -37,17 +37,17 @@ export default function StartScreen() {
               </div>
               <span className="text-sm sm:text-base text-slate-200">Use arrow keys or A/D to move</span>
             </div>
-            
+
             <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 bg-slate-700/50 rounded-xl border border-slate-600/50">
               <div className="text-xl sm:text-2xl">☄️</div>
               <span className="text-sm sm:text-base text-slate-200">Dodge falling asteroids</span>
             </div>
-            
+
             <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 bg-slate-700/50 rounded-xl border border-slate-600/50">
               <div className="text-xl sm:text-2xl">💎</div>
               <span className="text-sm sm:text-base text-slate-200">Collect power-ups</span>
             </div>
-            
+
             <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 bg-slate-700/50 rounded-xl border border-slate-600/50">
               <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
               <span className="text-sm sm:text-base text-slate-200">Survive as long as possible</span>
@@ -63,7 +63,7 @@ export default function StartScreen() {
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-purple-100">Power-ups</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-cyan-500/20 rounded-xl border border-cyan-500/30">
               <div className="p-2 sm:p-3 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-xl">
@@ -74,7 +74,7 @@ export default function StartScreen() {
                 <div className="text-xs sm:text-sm text-cyan-300">Blocks one hit</div>
               </div>
             </div>
-            
+
             <div className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-yellow-500/20 rounded-xl border border-yellow-500/30">
               <div className="p-2 sm:p-3 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl">
                 <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -84,7 +84,7 @@ export default function StartScreen() {
                 <div className="text-xs sm:text-sm text-yellow-300">5 seconds</div>
               </div>
             </div>
-            
+
             <div className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-green-500/20 rounded-xl border border-green-500/30">
               <div className="p-2 sm:p-3 bg-gradient-to-r from-green-400 to-emerald-400 rounded-xl">
                 <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -108,10 +108,10 @@ export default function StartScreen() {
             </div>
             <span>START GAME</span>
           </div>
-          
+
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
         </button>
-        
+
         <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-slate-400 font-medium">Press SPACE or click to begin your cosmic journey</p>
       </div>
     </div>

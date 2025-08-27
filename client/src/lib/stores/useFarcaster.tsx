@@ -36,18 +36,14 @@ export const useFarcaster = create<FarcasterState>()(
       notificationsEnabled: false,
 
       initialize: () => {
-        console.log('🔧 Initializing Farcaster store...');
         try {
           const context = MiniKitService.getContext();
           const user = MiniKitService.getUser();
-          const isFarcasterContext = MiniKitService.isFarcasterContext();
-          
-          console.log('📱 Farcaster context:', { context, user, isFarcasterContext });
           
           set({
             context,
             user,
-            isAuthenticated: isFarcasterContext,
+            isAuthenticated: MiniKitService.isFarcasterContext(),
             error: null
           });
 

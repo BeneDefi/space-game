@@ -22,50 +22,16 @@ export default function SocialGameApp() {
   const { gamePhase } = useGameState();
 
   useEffect(() => {
-    console.log('🚀 SocialGameApp mounting...');
-    
-    // Add error boundary for the whole app
-    window.addEventListener('error', (event) => {
-      console.error('Global error caught:', event.error);
-    });
-
-    window.addEventListener('unhandledrejection', (event) => {
-      console.error('Unhandled promise rejection:', event.reason);
-    });
-    
     // Initialize Farcaster context when app loads
-    try {
-      initialize();
-    } catch (error) {
-      console.error('Failed to initialize Farcaster:', error);
-    }
+    initialize();
 
-    // Reduce loading time and make it more responsive
+    // Simulate app loading
     const loadTimer = setTimeout(() => {
-      console.log('⏰ Loading timeout complete');
       setIsLoading(false);
-    }, 1500);
+    }, 3000);
 
-    return () => {
-      clearTimeout(loadTimer);
-      window.removeEventListener('error', () => {});
-      window.removeEventListener('unhandledrejection', () => {});
-    };
+    return () => clearTimeout(loadTimer);
   }, [initialize]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log('📊 App state:', {
-      isLoading,
-      isConnected,
-      showGame,
-      isAuthenticated,
-      user: user?.username,
-      currentScreen,
-      gamePhase,
-      error
-    });
-  }, [isLoading, isConnected, showGame, isAuthenticated, user, currentScreen, gamePhase, error]);
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -110,12 +76,8 @@ export default function SocialGameApp() {
     return <WalletConnect onConnected={() => setShowGame(true)} />;
   }
 
-  // Farcaster Authentication Check with better fallbacks
-  // Skip auth screen if we're clearly in Farcaster context but auth is still loading
-  const inFarcasterFrame = window.parent !== window;
-  const shouldShowAuthScreen = !isAuthenticated && !inFarcasterFrame && !farcasterLoading;
-  
-  if (shouldShowAuthScreen) {
+  // Farcaster Authentication Check
+  if (!isAuthenticated || !user) {
     return (
       <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center max-w-md mx-auto p-4">
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 text-center text-white border border-gray-700 max-w-sm w-full">
@@ -138,7 +100,7 @@ export default function SocialGameApp() {
           <button
             onClick={signIn}
             disabled={farcasterLoading}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl py-3 px-6 font-medium transition-all duration-200 flex items-center justify-center gap-2 mb-3"
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl py-3 px-6 font-medium transition-all duration-200 flex items-center justify-center gap-2"
           >
             {farcasterLoading ? (
               <>
@@ -153,18 +115,8 @@ export default function SocialGameApp() {
             )}
           </button>
 
-          <button
-            onClick={() => {
-              console.log('🔧 Bypassing Farcaster auth - continuing to game');
-              // Force continue to game
-            }}
-            className="w-full bg-gray-600 hover:bg-gray-700 rounded-xl py-2 px-4 text-sm font-medium transition-all duration-200"
-          >
-            Continue to Game
-          </button>
-
           <p className="text-xs text-gray-500 mt-4">
-            Best experience with Farcaster. Continue anyway to play offline.
+            Farcaster integration enables social features, score sharing, and leaderboard participation.
           </p>
         </div>
       </div>

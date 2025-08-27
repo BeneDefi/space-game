@@ -1,3 +1,4 @@
+
 declare global {
   interface Window {
     MiniKit?: {
@@ -60,98 +61,38 @@ export interface MiniKitUser {
 export class MiniKitService {
   private static readonly BASE_CHAIN_ID = 8453;
   private static readonly BASE_RPC = 'https://mainnet.base.org';
-  private static instance: MiniKitService | null = null;
-
-  static getInstance(): MiniKitService {
-    if (!this.instance) {
-      this.instance = new MiniKitService();
-    }
-    return this.instance;
-  }
 
   static isAvailable(): boolean {
-    try {
-      return typeof window !== 'undefined' &&
-             typeof (window as any).MiniKit !== 'undefined' &&
-             (window as any).MiniKit !== null;
-    } catch (error) {
-      console.warn('MiniKit availability check failed:', error);
-      return false;
-    }
+    return typeof window !== 'undefined' && !!window.MiniKit;
   }
 
   static isFarcasterContext(): boolean {
-    try {
-      if (!this.isAvailable()) return false;
-
-      const miniKit = (window as any).MiniKit;
-      const context = miniKit?.context;
-
-      // Check for Farcaster context indicators
-      return !!(
-        context?.client === 'farcaster' ||
-        context?.platform === 'farcaster' ||
-        window.location.ancestorOrigins?.length > 0 ||
-        window.parent !== window
-      );
-    } catch (error) {
-      console.warn('Farcaster context check failed:', error);
-      // Fallback: assume we're in Farcaster if we're in an iframe
-      return window.parent !== window;
-    }
+    const context = this.getContext();
+    return !!context?.fid && !!context?.isAuthenticated;
   }
 
   static getContext(): MiniKitContext | null {
-    try {
-      if (!this.isAvailable()) return null;
-
-      const miniKit = (window as any).MiniKit;
-      const context = miniKit?.context;
-
-      if (!context) {
-        // Return a minimal context if we're in an iframe (likely Farcaster)
-        if (window.parent !== window) {
-          return {
-            client: 'farcaster',
-            version: '1.0.0',
-            fid: null,
-            username: null
-          };
-        }
-        return null;
-      }
-
-      return context;
-    } catch (error) {
-      console.warn('Failed to get MiniKit context:', error);
-      return null;
-    }
+    if (!this.isAvailable()) return null;
+    return window.MiniKit?.context || null;
   }
 
   static getUser(): MiniKitUser | null {
-    try {
-      if (!this.isAvailable()) return null;
-
-      const miniKit = (window as any).MiniKit;
-      return miniKit?.user || null;
-    } catch (error) {
-      console.warn('Failed to get MiniKit user:', error);
-      return null;
-    }
+    if (!this.isAvailable()) return null;
+    return window.MiniKit?.user || null;
   }
 
   // Enhanced authentication
   static async signIn(): Promise<any> {
     if (!this.isAvailable()) throw new Error('MiniKit not available');
-
+    
     try {
       const result = await window.MiniKit?.auth?.signIn();
-
+      
       // Auto-verify after sign in
       if (result) {
         await this.verify();
       }
-
+      
       return result;
     } catch (error) {
       console.error('MiniKit sign-in failed:', error);
@@ -181,11 +122,11 @@ export class MiniKitService {
   // Enhanced sharing with Base context
   static async shareScore(score: number, gameUrl?: string): Promise<void> {
     if (!this.isAvailable()) throw new Error('MiniKit not available');
-
+    
     const user = this.getUser();
     const shareText = `🚀 Just scored ${score} points in Space Dodger on Base! ${user?.username ? `@${user.username}` : ''} Think you can beat it?`;
     const embeds = gameUrl ? [gameUrl] : [];
-
+    
     return await window.MiniKit?.share?.shareText(shareText, embeds);
   }
 
@@ -207,13 +148,13 @@ export class MiniKitService {
   // Base-optimized wallet functions
   static async connectWallet(): Promise<any> {
     if (!this.isAvailable()) throw new Error('MiniKit not available');
-
+    
     try {
       const result = await window.MiniKit?.wallet?.connectWallet();
-
+      
       // Auto-switch to Base after connecting
       await this.ensureBaseNetwork();
-
+      
       return result;
     } catch (error) {
       console.error('Wallet connection failed:', error);
@@ -223,10 +164,10 @@ export class MiniKitService {
 
   static async ensureBaseNetwork(): Promise<void> {
     if (!this.isAvailable()) return;
-
+    
     try {
       const currentChainId = await window.MiniKit?.wallet?.getChainId();
-
+      
       if (currentChainId !== this.BASE_CHAIN_ID) {
         await this.switchToBase();
       }
@@ -242,10 +183,10 @@ export class MiniKitService {
 
   static async sendTransaction(tx: any): Promise<string> {
     if (!this.isAvailable()) throw new Error('MiniKit not available');
-
+    
     // Ensure we're on Base before sending transaction
     await this.ensureBaseNetwork();
-
+    
     return await window.MiniKit?.wallet?.sendTransaction(tx);
   }
 
@@ -262,7 +203,7 @@ export class MiniKitService {
   // Notifications
   static async requestNotifications(): Promise<boolean> {
     if (!this.isAvailable()) return false;
-
+    
     try {
       return await window.MiniKit?.notifications?.requestPermission() || false;
     } catch {

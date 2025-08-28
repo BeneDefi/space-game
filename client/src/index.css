@@ -39,6 +39,4 @@ canvas {
   touch-action: none;
 }
 
-/* client/src/index.css (or global styles) */
-html, body, #root { height: 100%; }
-.canvas-wrap { height: 100dvh; width: 100dvw; overflow: hidden; }
+
